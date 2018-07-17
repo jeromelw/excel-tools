@@ -1,4 +1,4 @@
-package io.ishk.excel.tools.annotation;
+package io.ishuk.excel.tools.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
