@@ -1,6 +1,6 @@
 package io.ishuk.excel.tools.annotation;
 
-import io.ishuk.excel.tools.entity.convert.DefaultFunction;
+import io.ishuk.excel.tools.entity.DefaultFunction;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

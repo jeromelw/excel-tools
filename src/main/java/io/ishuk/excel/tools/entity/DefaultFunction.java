@@ -1,4 +1,4 @@
-package io.ishuk.excel.tools.entity.convert;
+package io.ishuk.excel.tools.entity;
 
 import java.util.function.Function;
 
