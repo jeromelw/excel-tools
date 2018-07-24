@@ -1,6 +1,8 @@
 package io.ishuk.excel.tools.internal.util;
 
+import io.ishuk.excel.tools.exception.ExcelException;
 import javafx.util.Pair;
+import org.apache.poi.ss.usermodel.Cell;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -37,4 +39,30 @@ public class ExcelBeanHelp {
                 .filter(x -> x != null && !Objects.equals(x.getKey(), "this$0"))
                 .collect(HashMap::new, (l, v) -> l.put(v.getKey(), v.getValue()), HashMap::putAll);
     }
+
+    public static <T> T newInstance(Class<T> clazz){
+        try {
+            return clazz.newInstance();
+        } catch (InstantiationException | IllegalAccessException e) {
+            throw new ExcelException(e);
+        }
+    }
+
+    public static void fieldSetValue(Field field, Object target, Object value){
+        field.setAccessible(true);
+        try {
+            field.set(target,value);
+        } catch (IllegalAccessException e) {
+            throw new ExcelException(e);
+        }
+    }
+
+    public static void autoFitCell(Cell cell, Object value){
+        if(value instanceof Date){
+            cell.setCellValue((Date) value);
+        } else {
+            cell.setCellValue(String.valueOf(value));
+        }
+    }
+
 }
