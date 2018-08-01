@@ -1,5 +1,9 @@
 package io.ishuk.excel.tools.internal.util;
 
+import io.ishuk.excel.tools.annotation.ExcelField;
+import io.ishuk.excel.tools.annotation.ExcelIgore;
+import io.ishuk.excel.tools.entity.ExcelReadHeader;
+import io.ishuk.excel.tools.entity.ExcelWriteHeader;
 import io.ishuk.excel.tools.exception.ExcelException;
 import javafx.util.Pair;
 import org.apache.poi.ss.usermodel.Cell;
@@ -27,15 +31,17 @@ public class ExcelBeanHelp {
         Class<?> beanClass = bean.getClass();
         Field[] fields = beanClass.getDeclaredFields();
 
-        return Arrays.stream(fields).map(x ->{
-            x.setAccessible(true);
-            try {
-                return new Pair<>(x.getName(),x.get(bean));
-            } catch (IllegalAccessException e){
+        return Arrays.
+                stream(fields).
+                map(x ->{
+                    x.setAccessible(true);
+                    try {
+                        return new Pair<>(x.getName(),x.get(bean));
+                    } catch (IllegalAccessException e){
 
-            }
-            return null;
-        })
+                    }
+                    return null;
+                })
                 .filter(x -> x != null && !Objects.equals(x.getKey(), "this$0"))
                 .collect(HashMap::new, (l, v) -> l.put(v.getKey(), v.getValue()), HashMap::putAll);
     }
@@ -65,4 +71,60 @@ public class ExcelBeanHelp {
         }
     }
 
+    public static <T> Map<String, ExcelReadHeader> beanToReaderHeaders(Class<T> clazz) {
+        Field[] fields = clazz.getDeclaredFields();
+        return Arrays
+                .stream(fields)
+                .filter(x -> !Objects.equals(x.getName(), "this$0") && !Objects.equals(x.getName(),"serialVersionUID"))
+                .filter(x -> Objects.isNull(x.getAnnotation(ExcelIgore.class)))
+                .map(x -> {
+                    x.setAccessible(Boolean.TRUE);
+                    ExcelField annotation = x.getAnnotation(ExcelField.class);
+                    if (null != annotation){
+                        return new Pair<>(annotation.columnName(), ExcelReadHeader.create(
+                                x,ConvertHelper.getConvert(annotation.readConvert())
+                        ));
+                    }
+                    return new Pair<>(x.getName(), ExcelReadHeader.create(x));
+                })
+                .collect(HashMap::new,
+                        (r,o) -> {
+                            r.put(o.getKey(), o.getValue());
+                        },
+                        HashMap::putAll);
+
+    }
+
+    public static <T> LinkedHashMap<String, ExcelWriteHeader> beadToWriterHeaders(T bean) {
+        if(bean instanceof LinkedHashMap){
+            return ((Map<String,?>) bean)
+                    .keySet()
+                    .stream()
+                    .collect(LinkedHashMap::new,
+                            (r,o) -> {
+                                r.put(o, ExcelWriteHeader.create(o));
+                            },
+                            Map::putAll);
+        }
+        final Field[] fields = bean.getClass().getDeclaredFields();
+
+        return Arrays
+                .stream(fields)
+                .filter(x -> !Objects.equals(x.getName(),"this$0") && !Objects.equals(x.getName(),"serialVersionUID"))
+                .filter(x -> Objects.isNull(x.getAnnotation(ExcelIgore.class)))
+                .map(x -> {
+                    x.setAccessible(Boolean.TRUE);
+                    ExcelField annotation = x.getAnnotation(ExcelField.class);
+                    if(null != annotation){
+                        return new Pair<>(x.getName(), ExcelWriteHeader.create(annotation.columnName(),
+                                ConvertHelper.getConvert(annotation.writeConvert())));
+                    }
+                    return new Pair<>(x.getName(), ExcelWriteHeader.create(x.getName()));
+                }).collect(LinkedHashMap::new,
+                        (r,o) -> {
+                            r.put(o.getKey(),o.getValue());
+                        },
+                        HashMap::putAll);
+
+    }
 }
