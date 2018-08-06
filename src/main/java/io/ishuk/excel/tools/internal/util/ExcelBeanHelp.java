@@ -127,4 +127,21 @@ public class ExcelBeanHelp {
                         HashMap::putAll);
 
     }
+
+    public static Object getColumnValue(Cell cell) {
+        switch (cell.getCellTypeEnum()){
+            case STRING:
+            case FORMULA:
+            case BLANK:
+                return cell.getStringCellValue();
+            case BOOLEAN:
+                return Boolean.toString(cell.getBooleanCellValue());
+            case NUMERIC:
+                return Double.toString(cell.getNumericCellValue());
+            case _NONE:
+            case ERROR:
+                default:
+                    return null;
+        }
+    }
 }
